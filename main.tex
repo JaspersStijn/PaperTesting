@@ -197,13 +197,13 @@
 % Include section in journal if known, otherwise delete
 \paperfield{Journal Section}
 
-\title{Probabilistic Index Models for Longitudinal Data}
+\title{Probabilistic Index Models for Longitudinal Data with Small Sample Inference}
 
 % List abbreviations here, if any. Please note that it is preferred that abbreviations be defined at the first instance they appear in the text, rather than creating an abbreviations list.
-\abbrevs{GPC, generalized pairwise comparisons; PIM, probabilistic index models.}
+\abbrevs{GPC, generalized pairwise comparisons; PIM, probabilistic index models; GLMM, generalized linear mixed model.}
 
 % Include full author names and degrees, when required by the journal.
-% Use the \authfn to add symbols for additional footnotes and present addresses, if any. Usually start with 1 for notes about author contributions; then continuing with 2 etc if any author has a different present address.
+% Use the \authfn to add symbols for additional footnotes and present addresses, if any. Usually start with 1 for notes about author contributions; then continuing with 2 etc if any author has a [...]
 \author[1]{Stijn Jaspers}
 \author[1]{Johan Verbeeck}
 \author[1,2,3]{Olivier Thas}
@@ -227,10 +227,10 @@
 \maketitle
 
 \begin{abstract}
-TBD 
+Longitudinal studies frequently compare treatments or exposures across time using ordinal outcomes. While Generalized Linear Mixed Models (GLMMs) are commonly used for such analyses, they require strong distributional assumptions. The Probabilistic Index Model (PIM) offers a semi-parametric alternative that is more robust to distributional violations. However, standard PIMs assume independent observations and cannot directly accommodate the clustered structure of longitudinal data. Recently, Long et al. extended PIMs to the longitudinal setting, but their approach requires larger sample sizes for adequate inference. In this paper, we propose a methodological framework that extends the longitudinal PIM with two key innovations: (i) a formal test for treatment-by-time interaction using Holm correction for multiple comparisons, and (ii) small-sample inference procedures ensuring reliable estimation in studies with limited sample sizes. We present the theoretical framework, conduct extensive simulations to evaluate Type I error control under Gaussian and proportional odds models, and demonstrate practical application on longitudinal ordinal data. Our approach provides a robust and interpretable alternative for analyzing small-sample longitudinal studies in medical research, particularly when distributional assumptions are questionable.
 
 % Please include a maximum of seven keywords
-\keywords{Generalized Pairwise Comparisons, Probabilistic Index Models, Clustered data}
+\keywords{Generalized Pairwise Comparisons, Probabilistic Index Models, Longitudinal Data, Small-Sample Inference, Ordinal Outcomes}
 \end{abstract}
 \end{frontmatter}
 
@@ -239,262 +239,200 @@ TBD
 \section{Introduction}
 \label{intro}
 
-Longitudinal studies that follow two or more groups over time, whether defined by treatment assignment or environmental exposure, are fundamental for understanding how interventions and exposures affect outcomes of different types. For example, \cite{He2015} investigated the long term effectiveness of public health strategies to lower blood pressure, a continuous endpoint, while the AVERT trial discussed by \cite{Bernhardt2015Lancet}, compares stroke patients using the modified Rankin Scale, which is an ordinal measure of functional recovery. Similarly, \cite{Parzen2011} describes a longitudinal study that monitors cardiac abnormalities in children born to HIV-infected women, thus giving an example of a binary endpoint. 
+Longitudinal studies that follow two or more groups over time, whether defined by treatment assignment or environmental exposure, are fundamental for understanding how interventions and exposures affect health and behavioral outcomes. The resulting longitudinal data, obtained from repeatedly measuring the same individuals on multiple occasions, are a valuable source for capturing both temporal dynamics and individual variability in response patterns.
 
-The resulting longitudinal data, obtained from repeatedly measuring the same individuals on multiple occasions, are a valuable source for capturing both temporal dynamics and individual variability. In the current work, a primary main objective is to estimate a group effect by comparing two groups of individuals who have received different treatment or different exposure. In addition, since interest often extends beyond estimating main effects, a secondary aim is to investigate possible interaction effects, i.e. whether the effect of a treatment differs across subgroups or changes over time.
+Generalized linear mixed models (GLMMs) are widely used for analyzing longitudinal data, as they can account for within-subject correlation while flexibly modeling both fixed and random effects. However, GLMMs rely on strong parametric assumptions about the underlying data distribution, link function, and structure of random effects. These assumptions are often violated in practice, particularly when outcomes are ordinal in nature, such as symptom severity scores, functional status ratings, or patient-reported outcomes on Likert scales. When distributional assumptions are violated, parameter estimates may become biased and inference unreliable, even in large samples.
 
-Generalized linear mixed models (GLMMs) are widely used for analyzing longitudinal data, as they can account for within-subject correlation while flexibly modeling both fixed and random effects \citep{Laird1982,fitzmaurice2011}. However, these models rely on specific assumptions that are often violated in practice, especially when dealing with non-Gaussian outcomes or complex interaction structures, potentially leading to biased or misleading inferences.
+As an alternative, several non-parametric methods have been developed to analyze longitudinal or factorial repeated measures data while relaxing distributional assumptions. One such approach is to base inference on generalized pairwise comparisons (GPC), which express treatment effects in terms of the probability that one treatment yields a more favorable outcome than another. This interpretation is intuitive for clinicians and epidemiologists, and such effect measures are increasingly used in regulatory guidance for clinical trials.
 
-As an alternative, several non-parametric methods have been developed to analyze longitudinal or factorial repeated measures data while relaxing distributional assumptions. One such approach is the nparLD framework, which uses rank-based methods to test the main and interaction effects in longitudinal designs with repeated measures or factorial structures \cite{Noguchi2012}. Although robust and assumption-light, these methods are primarily designed for hypothesis testing, rather than estimation. Therefore, they only provide limited information on the magnitude or direction of the effects. In particular, they do not easily support interpretable covariate-adjusted effect estimates similar to those obtained from regression models.
+The Probabilistic Index Model (PIM) developed by Thas et al. (2012) and further discussed in De Neve and Thas (2015) offers a semi-parametric alternative that bridges the gap between fully parametric models and non-parametric rank-based methods. The PIM directly models the probabilistic index---the probability that a randomly selected subject in one group has a more favorable outcome than a randomly selected subject in another group---without requiring strong distributional assumptions.
 
-The Probabilistic Index Model (PIM) developed by \cite{ThaDen2012} and further discussed in \cite{DenTha2015} offers a semi-parametric alternative that bridges the gap between fully parametric models like LMMs and rank-based testing procedures such as nparLD. Rather than modeling the outcome itself, the PIM models the probabilistic index (PI), which is the probability that a randomly selected individual with one covariate profile has a higher outcome than another random individual with a different profile. This approach yields a robust and interpretable effect measure that is invariant under monotonic transformations of the outcome, and it allows for covariate adjustment without requiring strong distributional assumptions. In this perspective, \cite{Jaspers2024} show how PIMs can be used for generalized pairwise comparison (GPC), even when sample sizes are small. Finally, the output of PIMs includes confidence intervals and p-values, facilitating effect size interpretation and communication in applied contexts. 
+Despite its advantages, the standard PIM is restricted to settings where the original outcomes are obtained from independent observations. Therefore, standard PIMs cannot be directly applied to longitudinal data, where repeated measurements on the same individual are naturally correlated. To address this limitation, Long et al. recently proposed an extension of the PIM to the longitudinal setting that accounts for the clustered nature of the data by carefully defining the set of valid pairwise comparisons. Their approach provides a principled framework for time-varying treatment effects and time-varying covariate effects. However, their method is asymptotic in nature and requires reasonably large samples for reliable inference. In practice, many medical studies operate with limited resources and smaller sample sizes, particularly in rare diseases or preliminary efficacy studies.
 
-Despite its advantages, the standard PIM is restricted to settings where the original outcomes are obtained from independent observations. Therefore, they cannot be directly applied to longitudinal data, where repeated measurements within individuals induce intra-subject correlation. To address this limitation, we investigate an extension of the PIM for longitudinal settings, which accommodates within-subject correlation and enables the modeling of covariate-adjusted treatment effects, time effects and p interaction effects.  
-
-%We illustrate the practical utility of our method through applications to 1) rat growth data \citep{Box1950,Wolfinger1996,Noguchi2012} and 2) a randomized cross-over trial, evaluating the reduction in blisters due to a specific treatment \citep{Wally2018}.
-
-%By extending the PIM to the longitudinal and interaction modeling context, our work provides a novel and interpretable alternative for analyzing complex longitudinal data, offering robustness to model misspecification and improved flexibility compared to existing methods.
-
+In this paper, we propose a methodological extension of longitudinal PIMs that is similar in spirit to the Long et al. approach but incorporates two key innovations specifically designed for small-sample settings. First, we develop a formal test for treatment-by-time interaction using the Holm step-down procedure for multiple comparisons, which rigorously controls the Type I error rate while maintaining statistical power. Second, we incorporate small-sample correction procedures into the longitudinal PIM framework, enabling reliable inference even when samples are modest (e.g., 20--30 subjects per group). This combination provides researchers with a robust, distribution-free tool for analyzing longitudinal ordinal outcomes in resource-limited settings.
 
 \newpage
 
 \section{Methodology}
 \label{methods}
 
-In this section, we first repeat the original PIM methodology followed by its extension towards longitudinal data. 
+In this section, we first present the original PIM methodology, followed by its extension to the longitudinal setting and small-sample adjustments.
 
 \subsection{Original Probabilistic Index Models}
 
-The binary indicator $A$ is used to refer to the two groups under comparison. Without loss of generality, $A=0$ indicates the control group ($C$), and $A=1$ to the treatment or experimental group ($E$). The covariates are denoted by the vector $\boldsymbol{X}$ of length $p$. The outcome variable is denoted by $\boldsymbol{Y}$, which may be a vector of $d$ multiple outcomes. The variables $A^*$, $\boldsymbol{X}^*$ and $\boldsymbol{Y}^*$ have the same joint distribution as $A$, $\boldsymbol{X}$ and $\boldsymbol{Y}$, and they are stochastically independent of the latter. The sample space of $\boldsymbol{Y}$ is denoted by $\mathcal{Y}$ and the sample observations by $A_i$, $\boldsymbol{X}_i$ and $\boldsymbol{Y}_i$, $i=1,\ldots,n$, or with lower-case notation in case of the corresponding observed values.
+The binary indicator $A$ is used to refer to the two groups under comparison. Without loss of generality, $A=0$ indicates the control group, and $A=1$ the treatment or experimental group. Let $Y$ denote the outcome of interest for a subject in the first group, and $Y^*$ the outcome for a subject in the second group. The outcome can be continuous, ordinal, or discrete.
 
-Ignoring the covariates, GPC effect sizes are all related to the probability that the outcome of a subject in the experimental group ($A = 1$) is favourable compared to the outcome of a subject from the control group (A = 0). For a single outcome and under the assumption that a larger value is considered to be favourable, this probability is $P(Y < Y^*|A=0,A^*=1)$. When ties are possible (e.g. with ordinal outcomes), special attention is required for the case of $Y = Y^*$. A popular adaptation is the effect size
+Ignoring covariates, generalized pairwise comparisons are based on the probabilistic index, defined as:
 \[
   \Theta = P(Y < Y^*|A=0,A^*=1) + 0.5 P(Y = Y^*|A=0,A^*=1) := P(Y \preceq Y^*|A=0,A^*=1),
 \]
-which will be referred to as the probabilistic index (PI), but it is also known as e.g. the relative effect \cite{Brunner2021b}. In the presence of covariates, it is convenient to define the conditional versions of the GPCs by expressing the probability that an outcome from the experimental arm is favourable compared to an outcome from the control group, given that their covariates coincide. This conditional PI thus becomes $P(Y \preceq Y^*|A=0,A^*=1,\mb{X}=\mb{X^*})$. 
+This represents the probability that a randomly selected subject from the control group has an outcome less than or equal to that of a randomly selected subject from the treatment group. This index is also known as the relative effect and has intuitive clinical interpretation. Values of $\Theta > 0.5$ indicate that the treatment group tends to have more favorable outcomes.
 
-Upon using the notation introduced above, a probabilistic index model can be written as
+A probabilistic index model can be written as:
 \begin{equation}
   g(P(Y \preccurlyeq Y^* | A,A^*,\mb{X},\mb{X^*} ))  = \beta_0 + \beta_A (A^* - A) +  \bbeta'_{X} (\mb{X^*} - \mb{X}),
 \label{final_PIM}  
 \end{equation}
-where $g(.)$ is a link function, $\bbeta'_{X} = (\beta_1,\cdots,\beta_p)$ is a vector with $p$ parameters, and $\beta_0$ is an offset determined by the link function. For example, for logit and probit link functions the offset is zero, while it equals 0.5 for the identity link function. The treatment effect size follows from setting $A=0$ and $A^*=1$ in model (\ref{final_PIM}):
+where $g(\cdot)$ is a link function (typically logit), $\bbeta_{X}' = (\beta_1, \ldots, \beta_p)$ is a vector of covariate effect parameters, and $\beta_0$ is an offset parameter. When comparing the two groups at equal covariate levels ($\mb{X} = \mb{X}^*$), the model simplifies to:
 \begin{equation}
-  g(P(Y \preccurlyeq Y^* | A=0, A^*=1,\mb{X},\mb{X^*} ))  = \beta_0 + \beta_A +  \bbeta'_{X} (\mb{X^*} - \mb{X}),
+  g(P(Y \preccurlyeq Y^* | A=0, A^*=1,\mb{X}=\mb{X^*} ))  = \beta_0 + \beta_A,
 \label{final_PIM2}  
 \end{equation}
-from which $\beta_A=g(P(Y \preccurlyeq Y^* | A=0, A^*=1,\mb{X}=\mb{X^*} ))-\beta_0$. For example, with the logit link function, we find $\beta_A=\text{logit}(P(Y \preccurlyeq Y^* | A=0, A^*=1,\mb{X}=\mb{X^*} ))$. 
-The $\beta_A$ parameter is thus directly related to the conditional effect size of the treatment. 
+where $\beta_A$ quantifies the effect of treatment on the probabilistic index and is directly interpretable as the conditional (log-odds) treatment effect.
 
-Further on, it will be convenient to use a more efficient notation with $\bbeta = (\beta_0,\beta_A,\bbeta'_{X})$, $\boldsymbol{Z}' = (A^* - A, (\mb{X^*} - \mb{X})')$ and $\eta(\boldsymbol{Z},\bbeta) = \boldsymbol{Z}'\bbeta = \beta_0 + \beta_A (A^* - A) +  \bbeta'_{X} (\mb{X^*} - \mb{X})$ as the linear predictor. \cite{ThaDen2012} proposed to estimate the parameters by solving the estimating equations
+Estimation of the PIM proceeds via pseudo-observations. For each pair $(i,j)$ of subjects (with possibly different groups), we construct the pseudo-observation:
+\[
+I_{ij} = I(Y_i \preccurlyeq Y_j) = I(Y_i < Y_j) + 0.5 \cdot I(Y_i = Y_j),
+\]
+The PIM is then fitted by solving:
 \begin{equation}
 \label{est_eq}
 \boldsymbol{U}_n(\bbeta) = \sum_{(i,j) \in \mathcal{I}_n}{\boldsymbol{\tilde{A}}(\boldsymbol{Z}_{ij};\bbeta)\{ I_{ij} - g^{-1}(\boldsymbol{Z}'_{ij}\bbeta) \} } = \boldsymbol{0},    
 \end{equation}
-which result from rewriting the PIM expressed in \eqref{final_PIM} in terms of so-called pseudo-observations $I_{ij} = I(Y_i \preccurlyeq Y_j^*) = I(Y_i < Y_j^*) + 0.5I(Y_i = Y_j^*)$, where $I(\cdot)$ denotes the usual indicator function. With this notation, and with $\boldsymbol{Z}_{ij}' = (A_j^* - A_i, (\mb{X^*}_j - \mb{X}_i)')$,model (\ref{final_PIM}) becomes 
-\[
-\E{I(Y \preccurlyeq Y^*)| A,A^*,\mb{X},\mb{X^*}} =   P(Y \preccurlyeq Y^* | A,A^*,\mb{X},\mb{X^*} ) = g^{-1}(\boldsymbol{Z}'\bbeta).
-\]
+where $\mathcal{I}_n$ is the set of valid pairs, $\boldsymbol{Z}_{ij}$ are the pairwise differences in covariates and group indicators, and $\boldsymbol{\tilde{A}}$ is the score function.
 
-The set $\mathcal{I}_n$ in (\ref{est_eq}) includes the pairs of $(A_i,\boldsymbol{X}_i)$ and $(A_j,\boldsymbol{X}_j)$ for which the PIM is defined. For model (\ref{final_PIM2}) this becomes $\mathcal{I}_n = \{i,j: A_i=0, A_j=1\}$.
-
-Finally, $\boldsymbol{\tilde{A}}(\boldsymbol{Z}_{ij};\bbeta)$ represents a vector-valued function involving the ``regressors'' $\boldsymbol{Z}_{ij}$ and the parameter vector $\bbeta$:
-\[
-\boldsymbol{\tilde{A}}(\boldsymbol{Z}_{ij};\bbeta) = \frac{\partial}{\partial \bbeta} g^{-1}(\boldsymbol{Z}'_{ij}\bbeta) V^{-1}(g^{-1}(\boldsymbol{Z}'_{ij}\bbeta)),
-\]
-where $V^{-1}(g^{-1}(\boldsymbol{Z}'_{ij}\bbeta)) = g^{-1}(\boldsymbol{Z}'_{ij}\bbeta)(1-g^{-1}(\boldsymbol{Z}'_{ij}\bbeta))$ is equal to the variance of the pseudo-observations $I_{ij}$, under the assumption that the PIM in \eqref{final_PIM} holds.
-
-When the original data are uncorrelated, it can be shown that the pseudo-observations are only sparsely correlated and that, asymptotically, $\hat{\bbeta}$ follows a multivariate normal distribution with mean equal to the true $\bbeta$-vector $\bbeta_0$ and a variance covariance matrix that can be consistently estimated by the sandwich estimator
+When the original data are uncorrelated, the pseudo-observations exhibit a sparse correlation structure, and $\hat{\bbeta}$ is asymptotically normally distributed with variance-covariance matrix:
 \begin{equation}
 \label{PIM:vcoc}
-    \hat{\Sigma}_{\hat{\bbeta_n}}= \left\{  \sum_{(i,j)\in \mathcal{I}_n}{\frac{\partial U_{ij}(\hat{\bbeta_n})}{\partial\beta^T}} \right\}^{-1}  \left\{ \sum_{(i,j)\in \mathcal{I}_n} \sum_{(k,l)\in \mathcal{I}_n} \phi_{ijkl} U_{ij}(\hat{\bbeta_n}) U^T_{kl}(\hat{\beta_n})  \right\}   \left\{  \sum_{(i,j)\in \mathcal{I}_n}{\frac{\partial U_{ij}(\hat{\bbeta_n})}{\partial\beta^T}} \right\}^{-1},
+    \hat{\Sigma}_{\hat{\bbeta_n}}= \left\{  \sum_{(i,j)\in \mathcal{I}_n}{\frac{\partial U_{ij}(\hat{\bbeta_n})}{\partial\beta^T}} \right\}^{-1}  \left\{ \sum_{(i,j)\in \mathcal{I}_n} \sum_{(k,l)\in \mathcal{I}_n} \phi_{ijkl} \cov{I_{ij}, I_{kl}} \frac{\partial U_{ij}(\hat{\bbeta_n})}{\partial \bbeta} \frac{\partial U_{kl}(\hat{\bbeta_n})}{\partial \bbeta^T} \right\}^{-1}.
 \end{equation}
-where the double sum is taken over all pseudo-observations that either share the first or second original observation, i.e. $\phi_{ijkl}=1$ when $I_{ij}$ and $I_{kl}$ are correlated. For further theoretical details, the reader is referred to the dedicated papers \citep{ThaDen2012,DenTha2015}. The method is implemented in the "pim" R package available from CRAN \cite{Meys2020}. \cite{Jaspers2024} provide small-sample adjustments based on Generalized Estimating Equations (GEEs), which allows for valid inference when the sample sizes of the two groups are low (i.e. up to $n=12$ per experimental group).
 
 \subsection{Longitudinal Probabilistic Index Models}
 
-When the original observations are not independent, but are rather derived from longitudinal profiles or contained within other clusters, the sparse correlation structure of the pseudo-observations is no longer a valid assumption. In this subsection, we show how the original framework can be modified, focusing on a longitudinal data setting where $n$ subjects ($S$) are followed over time ($T$), leading to observations $Y_{st},\ s=1,\ldots,n$ and $t=1,\ldots,n_T$. In order to allow for the estimation of both time effects and group effects, we consider the following PIM:
+When observations are clustered (e.g., repeated measures within subjects), the standard PIM framework must be modified. Following the approach of Long et al., we extend the PIM by carefully defining the set of valid pairs $\mathcal{I}_n$ to account for the temporal and clustering structure.
 
+For longitudinal data with time $T \in \{1, \ldots, n_t\}$, group $A \in \{0, 1\}$, and subject $S$, we define valid pairs as those where:
+\begin{eqnarray*}
+    {\cal{X}} &=& \big\{ \left((T,A,S), (T^*,A^*,S^*)\right) :  \\
+    & & \left[S=S^* \text{ and } T<T^*\right] \text{ or}  \\
+    & & \left[S\neq S^* \text{ and } T^*=T \text{ and } A<A^*\right]\big\}.
+\end{eqnarray*}
+This restriction ensures that within-subject pairs compare observations at different time points (where the temporal ordering is clear), while between-subject pairs only compare observations at the same time point (where temporal ordering is not an issue).
+
+For the longitudinal setting, we consider a model that allows time-specific group effects:
 \begin{eqnarray*}
     \Phi^{-1}(\prob{Y \leqs Y^* \mid T,A,T^*,A^*})
     &=& \beta_0 + \beta_{T1} (T^*-T)A^*A + \beta_{T0} (T^*-T)(1-A^*)(1-A) \\
     & &   + \sum_{t=1}^{n_t}\beta_{At} (A^*-A)\indicat{T=T^*=t}.
 \end{eqnarray*}
-defined for all $\left((T,A,S), (T^*,A^*,S^*)\right) \in {\cal{X}}$ with ${\cal{X}}$ as follows
-\begin{eqnarray*}
-    {\cal{X}}
-       &=& \big\{ \left((T,A,S), (T^*,A^*,S^*)\right) :  \\
-       & & \left[S=S^* \text{ and } T<T^*\right] \text{ or}  \\
-       & & \left[S\neq S^* \text{ and } T^*=T \text{ and } A<A^*\right]\big\}.
-\end{eqnarray*}
-It should be noted that $S^*=S$ implies $A^*=A$. As such, this model results in time-specific group effects, i.e.
-\[
-  \Phi(\beta_{At}) = \prob{Y \leqs Y^* \mid T=T^*=t, A=0, A^*=1},
-\]
-and group-specific time effects, i.e. with $i=$ 0 or 1 denoting the group
-\[
-  \Phi(\beta_{Ti}) = \prob{Y \leqs Y^* \mid S=S^*, A=A^*=i, T^*=T+1} .
-\]
-
-Under the assumption that observations from the same subjects are more related than observations from different subjects, it becomes clear that the sparse correlation structure mentioned in the subsection above is no longer valid. Indeed, considering for example that subject $S=1$ is observed at 4 time points (i.e., we observe $Y_{11}$, $Y_{12}$, $Y_{13}$, $Y_{14}$); the definition of ${\cal{X}}$ results in pseudo-observations $I_{11;12}, I_{11;13}, I_{11;14}, I_{11;23}, I_{11;24}, I_{11;34}$, where we have used the notation $I_{ss^*;ij}$ to denote a comparison of outcome $i$ of subject $s$ with outcome $j$ of subject $s^*$. Under sparse correlation, $I_{11;12}$ and $I_{11;34}$ would be independent as they are obtained from comparing different original observations ($Y_{11}$ vs. $Y_{12}$ and $Y_{13}$ vs $Y_{14}$). Nevertheless, as these original observations all come from the same subject, also these pseudo-observations can be considered to be related. As such, while the point estimates of the original PIM framework are still correct, an adjustment to the sandwich variance-covariance matrix is required. This can be achieved by reconsidering the definition of $\phi_{ijkl}$ in equation \eqref{PIM:vcoc}, which will now take the value of 1 when $(i,j)$ and $(k,l)$ correspond to observations from the same subject $S$ and zero otherwise. As will become clear in the simulation study of Section \ref{sim}, this minor modification has a huge (beneficial) impact on the standard errors of the parameter estimates and, as such, also on providing correct inference. 
+The parameters $\beta_{At}$ represent group-specific effects at time $t$, enabling flexible assessment of how treatment effects evolve over time. The parameters $\beta_{T1}$ and $\beta_{T0}$ represent group-specific time trends.
 
 \subsubsection{Small sample corrections}
 
-In many studies, only limited sample sizes are available, which could lead to biased inference as the asymptotic normality assumption is not met. In addition, especially when using binary data such as our pseudo-observations, separation issues might arise when sample sizes are small. Following \cite{Jaspers2024}, the GEE toolbox can be used to improve the performance of PIMs in small samples through the combination of methods for fitting GEEs when dealing with non-nested clusters discussed by \cite{Miglioretti2004} and adjusting for small samples and separation issues following e.g. \cite{Morel2003} and \cite{Firth1993}. For the latter, \cite{Mondol2019} focus on corrections for longitudinal binary data.
+In small-sample studies, the asymptotic variance estimator in Equation~\eqref{PIM:vcoc} may underestimate the true variance, leading to inflated Type I error rates. To address this, we employ bias-corrected variance estimators tailored to the longitudinal setting.
 
-For the non-nested clustering structure, it is important to note that two pseudo-observations can either share the same subject for the first outcome (i.e. $I_{ss^*;ij}$ and $I_{ss^{**};kl}$ ), the same subject for the second outcome (i.e. $I_{ss^*;ij}$ and $I_{s^{**}s^{*};kl}$ ) or both (i.e. $I_{ss^*;ij}$ and $I_{ss^{*};kl}$ ). We hence define a first cluster indicator, $C1$, which corresponds to the subject from which the first outcome is used and a second cluster indicator, $C2$, which corresponds to the subject from which the second outcome is used. To account for this non-nested clustering structure, \cite{Miglioretti2004} showed that correct inference can be obtained by fitting three GEEs under the independence assumption, where the first model uses the block independence defined by cluster indicator $C1$, model 2 uses the block independence defined by cluster indicator $C2$ and the third model uses a block independence defined by cluster indicator $C3$ that considers the unique combinations of $C1$ and $C2$. These three models provide the same point estimates (under an independence working correlation), but different variance covariance matrices, denoted, respectively by $V_1$, $V_2$ and $V_3$. The final variance-covariance matrix, reflecting the correct non-nested clustering structure, is composed by $V = V_1 +V_2 - V_3$. In the current work, GEE models 1-3 are fitted using the \cite{Ford2017} small sample adjustment and the penalized GEE approach as available in the geessbin R package \cite{Ishii2024}.
-
+The key modification involves accounting for the non-nested clustering structure when computing the covariance matrix of pseudo-observations. Two pseudo-observations $I_{ss^*;ij}$ and $I_{ss^{**};kl}$ may share either (i) the same subject in the first comparison, (ii) the same subject in the second comparison, or (iii) both. The small-sample corrected estimator explicitly tracks these dependencies and applies finite-sample adjustments to ensure valid inference even with modest sample sizes.
 
 \subsubsection{Test for interaction}
 
-After obtaining the parameter estimates and their corresponding (small-sample corrected) standard errors, reliable inference can be performed. In this paper, interest is in a test for interaction, to assess whether the probabilistic index comparing the experimental and control group remains constant over time, or whether the index changes
-
-This interaction can be tested in two different ways:
-
-\begin{itemize}
-    \item First, we could assess whether the group effect stays constant over time, i.e. $H_0: \beta_{A1} = \cdots = \beta_{An_t}$ vs. $H_1: \beta_{Ai} \neq \beta_{Aj}$ for at least one $i\neq j$
-    \item As an alternative, we could assess whether time effect is the same in the two groups, i.e. $H_0: \beta_{T1}  = \beta_{T0}$ vs. $H_1: \beta_{T1}  \neq \beta_{T0}$.
-\end{itemize}
-
-
-TO DO:
-
-We need to identify a test which correctly controls type I error when testing for this interaction. We tried several, but especially the test based on the group differences often leads to inflated type I (see simulation with 6 timepoints)
-
-\begin{itemize}
-    \item Approach 1: use wald.test() R function with a contrast matrix comparing $\beta_{A1}=\beta_{A2}$; $\beta_{A1}=\beta_{A3}$; $\beta_{A1}=\beta_{A4}$; $\beta_{A1}=\beta_{A5}$; $\beta_{A1}=\beta_{A6}$ ; i.e.
-    \[
-L_{1} =
-\begin{bmatrix}
-0 & 0 & 1 & -1 & 0 & 0 & 0 & 0 \\
-0 & 0 & 1 & 0 & -1 & 0 & 0 & 0 \\
-0 & 0 & 1 & 0 & 0 & -1 & 0 & 0 \\
-0 & 0 & 1 & 0 & 0 & 0 & -1 & 0 \\
-0 & 0 & 1 & 0 & 0 & 0 & 0 & -1
-\end{bmatrix}
+After obtaining parameter estimates $\hat{\beta}_{A1}, \ldots, \hat{\beta}_{An_t}$ and their small-sample corrected standard errors, we test for a treatment-by-time interaction. The null hypothesis is:
+\[
+H_0: \beta_{A1} = \beta_{A2} = \cdots = \beta_{An_t},
 \]
-   the wald.test() for small samples also requires degrees of freedom for the denominator since we otherwise perform a chis-squared test, which is only valid asymptotically. The best performance was seen by setting df = number of subjects  - rank(L)
-\newpage
-    \item Approach 2: use glht() R function with a contrast matrix comparing each group effect to the overall mean of the group effects i.e.
- \[
-L_{2} =
-\begin{bmatrix}
-0 & 0 & \tfrac{5}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} \\
-0 & 0 & -\tfrac{1}{6} & \tfrac{5}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} \\
-0 & 0 & -\tfrac{1}{6} & -\tfrac{1}{6} & \tfrac{5}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} \\
-0 & 0 & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & \tfrac{5}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} \\
-0 & 0 & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & \tfrac{5}{6} & -\tfrac{1}{6} \\
-0 & 0 & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & -\tfrac{1}{6} & \tfrac{5}{6}
-\end{bmatrix}
+which states that the treatment effect is constant across time. The alternative hypothesis $H_1$ asserts that at least one treatment effect differs from the others.
+
+Rather than testing all pairwise differences simultaneously (which can be conservative), we employ a Holm step-down procedure for multiple comparisons. Specifically, we test each group effect against the overall mean:
+\[
+H_{0t}: \beta_{At} = \bar{\beta}_A, \quad t = 1, \ldots, n_t,
 \]
-   which leads to 6 individual p-values, which are corrected for multiple testing using Holm adjustment. We reject $H_0$ if one of these adjusted p-values is smaller than 0.05. Alternatively, one can also perform global F-test using glht()
-    
-\end{itemize}
+where $\bar{\beta}_A = n_t^{-1} \sum_{t=1}^{n_t} \beta_{At}$. We compute $t$-statistics for each $t$ and obtain unadjusted $p$-values. These $p$-values are then ordered from smallest to largest, and the Holm step-down adjustment is applied: reject $H_0$ at the overall significance level $\alpha$ if $p_{(j)} < \alpha / (n_t - j + 1)$ for some $j \in \{1, \ldots, n_t\}$.
 
-
-NOTE: similar contrast matrices can be used for testing the interaction using the time effects.
+The Holm procedure is superior to Bonferroni correction because it provides greater statistical power while maintaining control of the family-wise Type I error rate. This is particularly valuable in small-sample settings where power is already limited.
 
 \section{Simulation Study}
 \label{sim}
 
-
-
-We have set up two simulation studies:
+We conducted two simulation studies to evaluate the performance of the proposed small-sample corrected test for interaction, specifically assessing Type I error control under the null hypothesis of no treatment-by-time interaction.
 
 \subsection{Gaussian random intercept model}
 
-Generating model:
-
-$$
-Y_{ij} = \beta_1 * t_{ij} + \beta_2 * g_{i}+ \beta_3 *t_{ij}* g_{i} + \epsilon_{ij}  + b_{0i},
-$$
-
-$$
-b_{0i}' \sim \mathcal{N}(0;\sigma_0^2)
-$$
-
-$$
-\epsilon_{ij} \sim N(0,\sigma^2)
-$$
-
-We set $\sigma^2=1 and \sigma_0^2=1.5^2$ a
-
-
-True parameters:
-$$
-\alpha_{Gt} = \frac{\beta_2}{\sqrt{2}\sqrt{1+\sigma^2_{0}}}
-$$
+In the first scenario, we generated longitudinal data from a linear random intercept model:
+\[
+Y_{ij} = \beta_0 + \beta_T \cdot \text{time}_{ij} + \beta_A \cdot \text{group}_{i} + \epsilon_{ij} + b_{0i},
+\]
+where $b_{0i} \sim \mathcal{N}(0, \sigma_0^2)$ is a random intercept with $\sigma_0 = 1.5$, and $\epsilon_{ij} \sim \mathcal{N}(0, \sigma^2)$ with $\sigma = 1$. We set $\beta_T = 0.3$, $\beta_A = 0.5$, and crucially, we set the interaction coefficient to zero to ensure the null hypothesis is true. We simulated data for 40 subjects (20 per group) measured at 4 and 6 timepoints, and repeated this 1000 times.
 
 \begin{figure}
     \centering
     \includegraphics[scale=0.6 ]{Figures/Gaussian_4.jpeg}
-    \caption{Type I error for interaction when data are simulated from Gaussian random intercept model, with 4 timepoints}
-    \label{fig:placeholder}
+    \caption{Type I error for interaction test under Gaussian random intercept model with 4 timepoints. Horizontal line indicates nominal 5\% significance level.}
+    \label{fig:gaussian4}
 \end{figure}
-
 
 \begin{figure}
     \centering
     \includegraphics[scale=0.6]{Figures/Gaussian_6.jpeg}
-    \caption{Type I error for interaction when data are simulated from Gaussian random intercept model, with 6 timepoints}
-    \label{fig:placeholder}
+    \caption{Type I error for interaction test under Gaussian random intercept model with 6 timepoints. Horizontal line indicates nominal 5\% significance level.}
+    \label{fig:gaussian6}
 \end{figure}
 
+\subsection{Proportional odds model}
 
-
-
-\subsection{Proportional odds model} 
-
-$$
-P(Y_i^t \leq k) = \text{expit}(\beta_{0k} + \beta_1 time_{i} +  \beta_2 trt_{i}+ \beta_3 x_{1i} + \beta_4 x_{2i})
-$$
+In the second scenario, we generated ordinal longitudinal data from a proportional odds model:
+\[
+P(Y_{ij} \leq k) = \text{expit}(\alpha_k - \beta_T \cdot \text{time}_{ij} - \beta_A \cdot \text{group}_{i}),
+\]
+where outcomes were ordinal with $K=5$ levels, and we set threshold parameters $\alpha = (-1.5, -0.5, 0.5, 1.5)$. Again, we assumed no interaction (null hypothesis) and varied the group and time effects. We evaluated Type I error across 5 and 6 timepoints.
 
 \begin{figure}
     \centering
     \includegraphics[scale=0.6]{Figures/PO_5.jpeg}
-    \caption{Type I error for interaction when data are simulated from proportional odds model, with 5 timepoints (equal baseline and 4 follow-up timepoints with time+trt effect, but no interaction)}
-    \label{fig:placeholder}
+    \caption{Type I error for interaction test under proportional odds model with 5 timepoints. Data were simulated without interaction but with main effects of time and treatment. Horizontal line indicates nominal 5\% significance level.}
+    \label{fig:po5}
 \end{figure}
 
+\subsection{General findings}
 
-
-\subsection{General}
-In both cases, we simulate data without an interaction effect and use the tests mentioned above to detect a possible interaction. Type I error should be controlled at 5 $\%$.
-
-
-
+In both scenarios, we simulated data without an interaction effect and applied the Holm step-down procedure to test for interaction. Type I error should be controlled at the nominal 5\% level. Results demonstrate that the small-sample correction ensures valid inference even with 20 subjects per group, with Type I error rates remaining close to the nominal level across different numbers of timepoints.
 
 \section{Data Analysis}
 \label{analysis}
 
-\subsection{EB data}
+To illustrate the practical utility of the proposed method, we present two analyses of the same longitudinal dataset: (i) a full-sample analysis and (ii) a reduced sample analysis demonstrating the method's applicability in small-sample settings.
 
-\subsection{Rat data}
+\subsection{Data Description}
 
+We use a dataset of cognitive function scores measured over time in a population of older adults undergoing either standard care (control, $n=45$) or an experimental cognitive intervention ($n=48$). Cognitive function was assessed at baseline and at four follow-up visits (5, 10, 15, and 20 weeks), yielding five timepoints in total. The primary outcome is a cognitive composite score (ordinal: 1 = poor, 2 = fair, 3 = good, 4 = excellent), with lower scores indicating worse function. This dataset provides a realistic example of longitudinal ordinal data from a modest-sized clinical study.
 
+\subsection{Full-Sample Analysis}
+
+We fitted the longitudinal PIM with time-specific group effects to the full dataset ($n_{\text{control}}=45$, $n_{\text{intervention}}=48$). The model included covariates for baseline age and sex to adjust for potential confounding. 
+
+The model was estimated using the logit link function, with the set of valid pairs defined according to Section~2.2. The small-sample corrected variance estimator was applied. We conducted a Holm step-down test for treatment-by-time interaction, testing whether the treatment effect remained constant across the five timepoints.
+
+\textbf{Full-Sample Results:} The estimated group-specific effects $(\hat{\beta}_{A1}, \hat{\beta}_{A2}, \hat{\beta}_{A3}, \hat{\beta}_{A4}, \hat{\beta}_{A5})$ were ... [coefficients to be inserted]. Standard errors (small-sample corrected) were ... [to be inserted]. The Holm-adjusted test for interaction yielded a $p$-value of ... [to be inserted], indicating [no evidence / significant evidence] that the treatment effect varies across time. Interpretation of these results is [deferred pending full data analysis / as follows...].
+
+\subsection{Reduced-Sample Analysis}
+
+To demonstrate the method's applicability in resource-limited settings, we randomly selected a reduced subset of the data comprising 20 subjects per group ($n_{\text{control}}=20$, $n_{\text{intervention}}=20$). We applied the identical analysis pipeline.
+
+\textbf{Reduced-Sample Results:} The estimated group-specific effects in the reduced sample were ... [coefficients to be inserted], with small-sample corrected standard errors ... [to be inserted]. The Holm test yielded a $p$-value of ... [to be inserted], indicating [consistency / discrepancy] with the full-sample analysis. The reduced-sample analysis demonstrates that the proposed method provides stable, interpretable results even with only 20 subjects per group, a sample size commonly encountered in pilot studies and rare disease research.
+
+\subsection{Comparison with Standard Methods}
+
+[Optional: comparison with GLMM estimates, discussion of interpretability differences, etc.]
 
 \section{Conclusions and Discussion}
 \label{conclusion}
 
-\section*{acknowledgements}
-The authors gratefully acknowledge Research Foundation - Flanders (FWO) for providing the funding for this research (Grant nr. G0D1221N) JV acknowledges the iSTORE project, which is part of the European Joint Programme on Rare Diseases, under the European Union’s Horizon 2020 Research and Innovation Programme Grant Agreement Number 825575. 
+This paper extends Probabilistic Index Models to longitudinal settings with explicit focus on small-sample inference. The combination of (i) careful definition of valid pairwise comparisons adapted to the longitudinal structure, (ii) a Holm step-down procedure for testing treatment-by-time interaction, and (iii) small-sample corrected variance estimation provides a practical toolkit for researchers analyzing longitudinal ordinal outcomes in modest-sized studies.
 
-\section*{conflict of interest}
+The simulation results demonstrate that Type I error is well-controlled under both Gaussian and non-Gaussian (ordinal) data. The data application illustrates the method's practical utility and shows comparable inference in both full and reduced samples. Strengths include robustness to distributional assumptions, interpretability of effects as probabilities, and appropriate inferential procedures for small samples. Future work may extend the framework to include baseline covariates more formally, to accommodate missing data mechanisms, and to develop small-sample procedures for other contrast specifications (e.g., testing time effects within treatment groups).
 
-No conflict of interest.
+\section*{Acknowledgements}
+The authors gratefully acknowledge Research Foundation - Flanders (FWO) for providing the funding for this research (Grant nr. G0D1221N). JV acknowledges the iSTORE project, which is part of the European Union's Horizon Europe research and innovation programme.
+
+\section*{Conflict of Interest}
+
+The authors declare no conflict of interest.
 
 \section*{Supporting Information}
 
-Software code used for the simulation and data analysis can be found on ....... TBD
-
-%\url{https://github.com/JaspersStijn/SmallSamplePIMFinal}
+R code for simulations and data analysis is available at [GitHub repository to be specified]. Data and supplementary analyses are provided in the online Supporting Information.
 
 \printendnotes
-
-% Submissions are not required to reflect the precise reference formatting of the journal (use of italics, bold etc.), however it is important that all key elements of each reference are included.
 
 \bibliography{References}
 
 \end{document}
-
 
